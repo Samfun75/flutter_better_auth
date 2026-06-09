@@ -207,7 +207,7 @@ class _SignInBetterAuth implements SignInBetterAuth {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
+    const _data = <String, dynamic>{};
     final _options = _setStreamType<Result<SignUpResponse>>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
