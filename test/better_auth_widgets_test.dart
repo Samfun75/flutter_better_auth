@@ -11,7 +11,7 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
     await FlutterBetterAuth.initialize(
       url: 'http://localhost/api/auth',
-      store: FakeCookieStorage(),
+      cookieStorage: FakeCookieStorage(),
     );
   });
 

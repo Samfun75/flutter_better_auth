@@ -85,10 +85,12 @@ extension SignInSocialExtension on SignInBetterAuth {
                 .map((str) => Cookie.fromSetCookieValue(str))
                 .toList();
 
-        await FlutterBetterAuth.storage?.saveCookies(
-          Uri.parse(FlutterBetterAuth.baseUrl).host,
-          cookies,
-        );
+        if (FlutterBetterAuth.hasCookieJar) {
+          await FlutterBetterAuth.cookieJar.saveFromResponse(
+            Uri.parse(FlutterBetterAuth.baseUrl),
+            cookies,
+          );
+        }
       }
     }
     return res;
