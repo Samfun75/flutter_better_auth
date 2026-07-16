@@ -11,7 +11,7 @@ void main() {
       WidgetsFlutterBinding.ensureInitialized();
       await FlutterBetterAuth.initialize(
         url: 'http://10.2.2.0',
-        store: FakeCookieStorage(),
+        cookieStorage: FakeCookieStorage(),
       );
       final a = FlutterBetterAuth.client;
       final b = FlutterBetterAuth.client;
