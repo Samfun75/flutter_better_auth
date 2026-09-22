@@ -15,7 +15,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_secure_storage: ^10.3.1
-  flutter_web_auth_2: ^5.0.2
+  flutter_web_auth_2: ^6.0.0-alpha.8
   freezed_annotation: ^3.1.0
   hive_ce: ^2.16.0
   json_annotation: ^4.11.0
