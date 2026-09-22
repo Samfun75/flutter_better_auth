@@ -6,6 +6,7 @@ import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_better_auth/core/storage/custom_persist_cookie_jar.dart';
+import 'package:flutter_better_auth/core/storage/serialized_persist_cookie_jar.dart';
 import 'package:flutter_better_auth/flutter_better_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -99,7 +100,7 @@ class FlutterBetterAuth {
     if (origin != null) {
       dioClient.options.headers['expo-origin'] = origin;
     }
-    cookieJar = CustomPersistCookieJar(
+    cookieJar = SerializedPersistCookieJar(
       store: storage,
       storage: MemoryStorage(),
     );
