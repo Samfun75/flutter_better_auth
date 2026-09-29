@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_better_auth/core/api/interceptor.dart';
+import 'package:flutter_better_auth/core/api/default/sign_in/models/social/social_id_token_body.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _RecordingHandler extends RequestInterceptorHandler {
@@ -65,6 +66,38 @@ void main() {
     test('leaves a null GET body untouched', () {
       final options = run('/x', null, method: 'GET');
       expect(options.data, isNull);
+    });
+
+    test('sends the idToken user profile and omits its empty parts', () {
+      final options = run('/sign-in/social', {
+        'provider': 'apple',
+        'idToken': const SocialIdTokenBody(
+          token: 'id-token',
+          nonce: 'raw-nonce',
+          user: SocialIdTokenUser(
+            name: SocialIdTokenUserName(firstName: 'Abebe'),
+          ),
+        ),
+      });
+      expect(options.data, {
+        'provider': 'apple',
+        'idToken': {
+          'token': 'id-token',
+          'nonce': 'raw-nonce',
+          'user': {
+            'name': {'firstName': 'Abebe'},
+          },
+        },
+      });
+    });
+
+    test('omits user from an idToken body without a profile', () {
+      final options = run('/sign-in/social', {
+        'idToken': const SocialIdTokenBody(token: 'id-token'),
+      });
+      expect(options.data, {
+        'idToken': {'token': 'id-token'},
+      });
     });
   });
 }
