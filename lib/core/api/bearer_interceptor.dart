@@ -14,7 +14,10 @@ class BearerTokenInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     final token = FlutterBetterAuth.bearerToken;
-    if (token != null && token.isNotEmpty) {
+    // A header set earlier (an API gateway's own token) wins; the session still rides on the cookie.
+    if (token != null &&
+        token.isNotEmpty &&
+        !options.headers.containsKey('Authorization')) {
       options.headers['Authorization'] = 'Bearer $token';
     }
     handler.next(options);

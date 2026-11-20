@@ -8,6 +8,11 @@ class _H extends ResponseInterceptorHandler {
   void next(Response response) {}
 }
 
+class _RequestH extends RequestInterceptorHandler {
+  @override
+  void next(RequestOptions requestOptions) {}
+}
+
 Response _res(String path, Object? data, [Map<String, List<String>>? h]) =>
     Response(
       requestOptions: RequestOptions(path: path),
@@ -30,5 +35,26 @@ void main() {
     FlutterBetterAuth.setBearerToken(null);
     i.onResponse(_res('/get-session', {'token': 'x'}), _H());
     expect(FlutterBetterAuth.bearerToken, isNull);
+  });
+
+  test('attaches the token when nothing else set Authorization', () {
+    FlutterBetterAuth.setBearerToken('session');
+    final options = RequestOptions(path: '/get-session');
+
+    BearerTokenInterceptor().onRequest(options, _RequestH());
+
+    expect(options.headers['Authorization'], 'Bearer session');
+  });
+
+  test('leaves an Authorization header an earlier interceptor set', () {
+    FlutterBetterAuth.setBearerToken('session');
+    final options = RequestOptions(
+      path: '/get-session',
+      headers: {'authorization': 'Bearer gateway'},
+    );
+
+    BearerTokenInterceptor().onRequest(options, _RequestH());
+
+    expect(options.headers['Authorization'], 'Bearer gateway');
   });
 }
