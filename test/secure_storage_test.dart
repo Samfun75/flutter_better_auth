@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_better_auth/core/storage/secure_storage.dart';
+import 'package:flutter_better_auth/core/storage/storage.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -92,6 +94,41 @@ void main() {
       expect(backing.keys.every((k) => !k.contains(':')), isTrue);
       final loaded = await secureStorage.loadCookies('example.com:8080');
       expect(loaded.single.value, 'v');
+    });
+  });
+
+  group('SecureStorage on a device whose keystore cannot create its key', () {
+    late SecureStorage secureStorage;
+
+    setUp(() {
+      final store = MockSecureStore();
+      final failure = PlatformException(
+        code: 'Exception encountered',
+        message: 'java.security.KeyStoreException: System error',
+      );
+      when(() => store.read(key: any(named: 'key'))).thenThrow(failure);
+      when(
+        () => store.write(
+          key: any(named: 'key'),
+          value: any(named: 'value'),
+        ),
+      ).thenThrow(failure);
+      when(() => store.delete(key: any(named: 'key'))).thenThrow(failure);
+      secureStorage = SecureStorage(storage: store);
+    });
+
+    test('reports loads as an unavailable store', () {
+      expect(
+        secureStorage.loadCookies('example.com'),
+        throwsA(isA<CookieStoreUnavailable>()),
+      );
+    });
+
+    test('reports saves as an unavailable store', () {
+      expect(
+        secureStorage.saveCookies('example.com', [Cookie('session', 'v')]),
+        throwsA(isA<CookieStoreUnavailable>()),
+      );
     });
   });
 }

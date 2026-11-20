@@ -8,6 +8,11 @@ class CustomPersistCookieJar extends PersistCookieJar {
 
   @override
   Future<void> saveFromResponse(Uri uri, List<Cookie> cookies) async {
+    await _unlessStoreUnavailable(() => _persist(uri, cookies));
+    await super.saveFromResponse(uri, cookies);
+  }
+
+  Future<void> _persist(Uri uri, List<Cookie> cookies) async {
     final persisted = await store?.loadCookies(uri.host) ?? <Cookie>[];
     final merged = <String, Cookie>{};
 
@@ -27,15 +32,21 @@ class CustomPersistCookieJar extends PersistCookieJar {
     }
 
     await store?.saveCookies(uri.host, merged.values.toList());
-    await super.saveFromResponse(uri, cookies);
   }
 
   @override
   Future<List<Cookie>> loadForRequest(Uri uri) async {
-    final cookies = await store?.loadCookies(uri.host) ?? <Cookie>[];
+    final List<Cookie> cookies;
+    try {
+      cookies = await store?.loadCookies(uri.host) ?? <Cookie>[];
+    } on CookieStoreUnavailable {
+      return super.loadForRequest(uri);
+    }
     final active = cookies.where((cookie) => !_isExpired(cookie)).toList();
     if (active.length != cookies.length) {
-      await store?.saveCookies(uri.host, active);
+      await _unlessStoreUnavailable(() async {
+        await store?.saveCookies(uri.host, active);
+      });
     }
     await super.deleteAll();
     await super.saveFromResponse(uri, active);
@@ -43,8 +54,21 @@ class CustomPersistCookieJar extends PersistCookieJar {
   }
 
   Future<void> clearFor(Uri uri) async {
-    await store?.saveCookies(uri.host, []);
+    await _unlessStoreUnavailable(() async {
+      await store?.saveCookies(uri.host, []);
+    });
     await deleteAll();
+  }
+
+  // The in-memory jar still holds the session then, so it lasts until the process ends.
+  Future<void> _unlessStoreUnavailable(
+    Future<void> Function() operation,
+  ) async {
+    try {
+      await operation();
+    } on CookieStoreUnavailable {
+      return;
+    }
   }
 
   String _cookieKey(Cookie cookie, Uri uri) {

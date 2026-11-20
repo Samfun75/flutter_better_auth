@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cookie_jar/cookie_jar.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'storage.dart';
@@ -31,7 +32,22 @@ class SecureStorage implements StorageInterface {
   }
 
   @override
-  Future<void> saveCookies(String url, List<Cookie> cookies) async {
+  Future<void> saveCookies(String url, List<Cookie> cookies) =>
+      _platformGuarded(() => _saveCookies(url, cookies));
+
+  @override
+  Future<List<Cookie>> loadCookies(String url) =>
+      _platformGuarded(() => _loadCookies(url));
+
+  Future<T> _platformGuarded<T>(Future<T> Function() operation) async {
+    try {
+      return await operation();
+    } on PlatformException catch (e) {
+      throw CookieStoreUnavailable(e);
+    }
+  }
+
+  Future<void> _saveCookies(String url, List<Cookie> cookies) async {
     final key = _normalizeKey(url);
     await _deleteChunks(key);
     if (cookies.isEmpty) return;
@@ -44,8 +60,7 @@ class SecureStorage implements StorageInterface {
     }
   }
 
-  @override
-  Future<List<Cookie>> loadCookies(String url) async {
+  Future<List<Cookie>> _loadCookies(String url) async {
     final key = _normalizeKey(url);
     final countStr = await _storage.read(key: '$key$_countSuffix');
     if (countStr == null) return [];
